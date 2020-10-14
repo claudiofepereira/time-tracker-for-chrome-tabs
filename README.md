@@ -2,6 +2,7 @@
 A script which tracks time spent in each chrome tab opened.
 
 # TODO
+- Find a better way to stop the program
 - Extract dictionary information to a json file
 - Create GUI in browser to access json information
 - Find a way to check if chrome is opened
