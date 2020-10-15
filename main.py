@@ -6,6 +6,10 @@ import math
 import datetime
 import json
 import os.path
+import threading
+
+# Variable used to store the updating threads from json_update_thread()
+t = None
 
 # Variables for url tracking
 old_link = ""
@@ -24,16 +28,43 @@ def parse_url(url):
     return url_split[0]
 
 
-# Json dumper
+# Json dumping, exporting content to json file in write mode
 def json_dumper(data, file):
     with open(file, 'w') as jsonFile:
         json.dump(data, jsonFile)
 
 
-# Json loader
+# Loading external json files in read mode
 def json_loader(file):
     with open(file, 'r') as jsonFile:
         return json.load(jsonFile)
+
+
+# Thread from 10 to 10 seconds to update json file and reset urls dict
+# New thread gets created recursively
+def json_update_thread():
+    global t
+    t = threading.Timer(10.0, json_update_thread)
+    t.start()
+    json_updater()
+    
+
+# Updating json files if exists or not
+def json_updater():
+    # If file doesn't exist, just create new one and insert data
+    if not os.path.isfile('data/urls_time.json'):
+        json_dumper(urls_dict, 'data/urls_time.json')
+
+    # If the file exists, need to import old data, update the data, then rewrite file content
+    if os.path.isfile('data/urls_time.json'):
+        data = json_loader('data/urls_time.json')
+        for key, value in urls_dict.items():
+            if key in data:
+                data[key] += value
+        for key in urls_dict:
+            urls_dict[key] = 0
+        json_dumper(data, 'data/urls_time.json')
+
 
 # Obtained from:
 # https://stackoverflow.com/questions/52675506/get-chrome-tab-url-in-python
@@ -60,6 +91,7 @@ def get_browser_tab_url(browser: str):
 
 
 if __name__ == "__main__":
+    json_update_thread()
     while True:
         try:
             start_time = time.time()
@@ -87,20 +119,6 @@ if __name__ == "__main__":
                     urls_dict[url] = total_time
 
         except (KeyboardInterrupt, SystemExit):
-            # If file doesn't exist, just create new one and insert data
-            if not os.path.isfile('data/urls_time.json'):
-                json_dumper(urls_dict, 'data/urls_time.json')
-
-            # If the file exists, need to import old data, update the data, then rewrite file content
-            if os.path.isfile('data/urls_time.json'):
-                data = json_loader('data/urls_time.json')
-
-                for url in urls_dict:
-                    if url in data:
-                        data[url] = data[url] + urls_dict[url]
-                    else:
-                        data[url] = urls_dict[url]
-
-                json_dumper(data, 'data/urls_time.json')
-
+            json_updater()
+            t.cancel()
             sys.exit()
