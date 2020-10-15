@@ -4,23 +4,39 @@ import sys
 from urllib.parse import urlparse
 import math
 import datetime
+import json
+import os.path
 
 # Variables for url tracking
 old_link = ""
 new_link = ""
 
 
-urls_dict = {} # Dictionary for url and time tracking
-total_time = 0 # Variable to track time spent in each url before changing
+urls_dict = {}  # Dictionary for url and time tracking
+total_time = 0  # Variable to track time spent in each url before changing
 
 
-# Parse the new url to get only the basic website info
+# URL Parser
+# gets the basic detail of the website (google.com for example)
 def parse_url(url):
     o = urlparse(new_link)
     url_split = o.path.split("/", 1)
     return url_split[0]
 
 
+# Json dumper
+def json_dumper(data, file):
+    with open(file, 'w') as jsonFile:
+        json.dump(data, jsonFile)
+
+
+# Json loader
+def json_loader(file):
+    with open(file, 'r') as jsonFile:
+        return json.load(jsonFile)
+
+# Obtained from:
+# https://stackoverflow.com/questions/52675506/get-chrome-tab-url-in-python
 def get_browser_tab_url(browser: str):
     """
     Get browser tab url, browser must already open
@@ -70,11 +86,21 @@ if __name__ == "__main__":
                 elif url not in urls_dict:
                     urls_dict[url] = total_time
 
-        except KeyboardInterrupt:
-            # TODO: export dictionary information to json file
-            print("----------")
-            for url, time in urls_dict.items():
-                print("Url:", url)
-                print("Time spent:", str(datetime.timedelta(seconds=int(time))))
-                print("----------")
-            exit()
+        except (KeyboardInterrupt, SystemExit):
+            # If file doesn't exist, just create new one and insert data
+            if not os.path.isfile('data/urls_time.json'):
+                json_dumper(urls_dict, 'data/urls_time.json')
+
+            # If the file exists, need to import old data, update the data, then rewrite file content
+            if os.path.isfile('data/urls_time.json'):
+                data = json_loader('data/urls_time.json')
+
+                for url in urls_dict:
+                    if url in data:
+                        data[url] = data[url] + urls_dict[url]
+                    else:
+                        data[url] = urls_dict[url]
+
+                json_dumper(data, 'data/urls_time.json')
+
+            sys.exit()
