@@ -40,7 +40,7 @@ def json_loader(file):
         return json.load(jsonFile)
 
 
-# Thread from 10 to 10 seconds to update json file and reset urls dict
+# New Thread created from 10 to 10 seconds to update json file and reset urls dict
 # New thread gets created recursively
 def json_update_thread():
     global t
@@ -61,6 +61,8 @@ def json_updater():
         for key, value in urls_dict.items():
             if key in data:
                 data[key] += value
+            else:
+                data.update({key: value}) # Update function to add new urls to the json file
         for key in urls_dict:
             urls_dict[key] = 0
         json_dumper(data, 'data/urls_time.json')
@@ -91,7 +93,7 @@ def get_browser_tab_url(browser: str):
 
 
 if __name__ == "__main__":
-    json_update_thread()
+    json_update_thread() # Runs from 10 to 10 seconds to keep updating the json file
     while True:
         try:
             start_time = time.time()
