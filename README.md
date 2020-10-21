@@ -10,6 +10,3 @@ A script which tracks time spent in each chrome tab opened.
 
 # Bugs
 - Script crashes when closing all windows of chrome.
-
-# Food for thought
-- Change the time saved from float to int.
