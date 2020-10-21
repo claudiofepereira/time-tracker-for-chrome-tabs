@@ -62,9 +62,8 @@ def json_updater():
             if key in data:
                 data[key] += value
             else:
-                data.update({key: value}) # Update function to add new urls to the json file
-        for key in urls_dict:
-            urls_dict[key] = 0
+                data.update({key: value})
+        urls_dict.clear()
         json_dumper(data, 'data/urls_time.json')
 
 
